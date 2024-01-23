@@ -173,3 +173,32 @@ app.get("/getAllNotes", express.json(), async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.delete("/deleteNote/:noteId", express.json(), async (req, res) => {
+    try {
+        const noteId = req.params.noteId;
+        if (!ObjectId.isValid(noteId)) {
+            return res.status(400).json({error: "Invalid note ID."});
+        }
+
+        verifyRequestAuth(req, async (err, decoded) => {
+            if (err) {
+                return res.status(401).send("Unauthorized.");
+            }
+
+            const collection = db.collection(COLLECTIONS.notes);
+            const data = await collection.deleteOne({ 
+                username: decoded.username, 
+                _id: new ObjectId(noteId) 
+            });
+            if (!data?.deletedCount) {
+                return res
+                    .status(404)
+                    .json(`Note with ID ${noteId} belonging to the user not found.`);
+            }
+            res.status(200).json({ response: `Document with ID ${noteId} properly deleted` });
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
