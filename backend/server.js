@@ -209,7 +209,7 @@ app.patch("/editNote/:noteId", express.json(), async (req, res) => {
         if (!title && !content) {
             return res
                 .status(400)
-                .json({ error: "Title or content to edit must be provided to edit note."});
+                .json({ error: "Title or content must be provided to edit note."});
         }
 
         const noteId = req.params.noteId;
