@@ -202,3 +202,49 @@ app.delete("/deleteNote/:noteId", express.json(), async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.patch("/editNote/:noteId", express.json(), async (req, res) => {
+    try {
+        const { title, content } = req.body;
+        if (!title && !content) {
+            return res
+                .status(400)
+                .json({ error: "Title or content to edit must be provided to edit note."});
+        }
+
+        const noteId = req.params.noteId;
+        if (!ObjectId.isValid(noteId)) {
+            return res.status(400).json({ error: "Invalid note ID." });
+        }
+
+        verifyRequestAuth(req, async (err, decoded) => {
+            if (err) {
+                return res.status(401).send("Unauthorized.");
+            }
+
+            const update = { $set : {} };
+            if (title) {
+                update.$set.title = title;
+            }
+            if (content) {
+                update.$set.content = content;
+            }
+
+            const collection = db.collection(COLLECTIONS.notes);
+            const updateResult = await collection.updateOne(
+                { 
+                    _id: new ObjectId(noteId),
+                    username: decoded.username
+                },
+                update);
+            if (!updateResult?.matchedCount) {
+                return res
+                    .status(404)
+                    .json({ error: `Note with ID ${noteId} belonging to the user not found`})
+            }
+            res.status(200).json({ response: `Document with ID ${noteId} properly updated.` });
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
