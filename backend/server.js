@@ -157,3 +157,19 @@ app.get("/getNote/:noteId", express.json(), async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.get("/getAllNotes", express.json(), async (req, res) => {
+    try {
+        verifyRequestAuth(req, async (err, decoded) => {
+            if (err) {
+                return res.status(401).send("Unauthorized.");
+            }
+
+            const collection = db.collection(COLLECTIONS.notes);
+            const data = await collection.find({ username: decoded.username }).toArray();
+            res.json({ response: data });
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
